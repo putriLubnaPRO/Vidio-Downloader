@@ -3,37 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YT Downloader Free</title>
+    <title>YT Downloader - Kualitas Maksimal</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center py-10 px-4">
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
 
     <!-- Header -->
     <div class="text-center mb-8">
-        <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">YT Downloader</h1>
-        <p class="text-slate-400 mt-2">Download Video & Audio YouTube Gratis</p>
+        <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">
+            YT Downloader Pro
+        </h1>
+        <p class="text-slate-400 mt-2 text-sm">Download Video YouTube Resolusi Penuh (1080p / 4K / Max)</p>
     </div>
 
-    <!-- Main Card -->
-    <div class="w-full max-w-lg bg-slate-800 p-6 rounded-2xl shadow-2xl border border-slate-700">
-        <input id="ytUrl" type="text" placeholder="Tempel link YouTube di sini..." 
-            class="w-full p-4 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-red-500 mb-4 text-sm">
-        
-        <select id="format" class="w-full p-4 bg-slate-900 border border-slate-700 rounded-xl mb-4 text-sm focus:outline-none">
-            <option value="mp4">Video (MP4)</option>
-            <option value="mp3">Audio (MP3)</option>
-        </select>
+    <!-- Card Downloader -->
+    <div class="w-full max-w-md bg-slate-800 p-6 rounded-2xl shadow-2xl border border-slate-700">
+        <!-- Input URL -->
+        <div class="mb-4">
+            <label class="block text-xs font-semibold text-slate-300 mb-1">URL Video YouTube</label>
+            <input id="ytUrl" type="text" placeholder="https://www.youtube.com/watch?v=..." 
+                class="w-full p-3.5 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-red-500 text-sm">
+        </div>
 
+        <!-- Form Tipe Format -->
+        <div class="grid grid-cols-2 gap-3 mb-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Format</label>
+                <select id="format" onchange="toggleQualityDropdown()" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-red-500">
+                    <option value="mp4">Video (MP4)</option>
+                    <option value="mp3">Audio (MP3)</option>
+                </select>
+            </div>
+
+            <!-- Options Kualitas Video -->
+            <div id="qualityContainer">
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Kualitas Video</label>
+                <select id="vQuality" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-red-500">
+                    <option value="max" selected>Kualitas Maksimal (Max/4K)</option>
+                    <option value="1080">Full HD (1080p)</option>
+                    <option value="720">HD (720p)</option>
+                    <option value="480">SD (480p)</option>
+                    <option value="360">Low (360p)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Tombol Submit -->
         <button onclick="downloadVideo()" id="btnSubmit" 
-            class="w-full bg-red-600 hover:bg-red-700 transition py-4 rounded-xl font-bold">
-            Ambil Link Download
+            class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-red-600/30">
+            Ambil Link Ukuran Penuh
         </button>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="hidden mt-4 text-center">
+            <p class="text-xs text-yellow-400 animate-pulse">Sedang memproses video kualitas tinggi, mohon tunggu...</p>
+        </div>
     </div>
 
     <!-- Result Area -->
-    <div id="result" class="hidden w-full max-w-lg mt-6 p-6 bg-slate-800 rounded-2xl border border-slate-700 text-center">
-        <p id="statusText" class="text-green-400 font-bold mb-4">Video siap diunduh!</p>
-        <a id="downloadLink" href="#" target="_blank" 
+    <div id="result" class="hidden w-full max-w-md mt-6 p-6 bg-slate-800 rounded-2xl border border-slate-700 text-center space-y-3">
+        <p class="text-green-400 font-bold text-sm">Link Siap Diunduh!</p>
+        <a id="downloadLink" href="#" target="_blank" rel="noopener noreferrer"
+            class="block bg-green-600 hover:bg-green-700 py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-green-600/20">
+            Download File
+        </a>
+    </div>
+
+    <!-- Error Area -->
+    <div id="error" class="hidden w-full max-w-md mt-4 p-3 bg-red-900/40 text-red-300 rounded-xl text-xs border border-red-700/50 text-center"></div>
+
+    <script>
+        function toggleQualityDropdown() {
+            const format = document.getElementById('format').value;
+            const qualityContainer = document.getElementById('qualityContainer');
+            if (format === 'mp3') {
+                qualityContainer.classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                qualityContainer.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        async function downloadVideo() {
+            const url = document.getElementById('ytUrl').value.trim();
+            const format = document.getElementById('format').value;
+            const quality = document.getElementById('vQuality').value;
+            
+            const btn = document.getElementById('btnSubmit');
+            const loading = document.getElementById('loading');
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('error');
+            const downloadLink = document.getElementById('downloadLink');
+
+            if (!url) {
+                alert("Silakan tempel URL YouTube terlebih dahulu!");
+                return;
+            }
+
+            // Reset UI
+            resultDiv.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+            loading.classList.remove('hidden');
+            btn.innerText = "Memproses Video...";
+            btn.disabled = true;
+
+            try {
+                // Request Payload ke API Engine (Cobalt)
+                const payload = {
+                    url: url,
+                    vQuality: format === "mp3" ? "720" : quality, // max, 1080, 2160, dll
+                    isAudioOnly: format === "mp3",
+                    aFormat: "mp3"
+                };
+
+                const response = await fetch("https://co.wuk.sh/api/json", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (data.url) {
+                    downloadLink.href = data.url;
+                    resultDiv.classList.remove('hidden');
+                } else if (data.status === "picker") {
+                    // Jika video memiliki beberapa stream audio/video terpisah
+                    downloadLink.href = data.picker[0].url;
+                    resultDiv.classList.remove('hidden');
+                } else {
+                    throw new Error(data.text || "Gagal mengekstrak video. Pastikan link publik & valid.");
+                }
+            } catch (err) {
+                errorDiv.innerText = "Error: " + err.message;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                loading.classList.add('hidden');
+                btn.innerText = "Ambil Link Ukuran Penuh";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
             class="block bg-green-600 hover:bg-green-700 py-3 rounded-xl font-bold transition">Download Sekarang</a>
     </div>
 
