@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YT Downloader - Kualitas Maksimal</title>
+    <title>YT Downloader Pro - Auto Fallback</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
@@ -13,7 +13,7 @@
         <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">
             YT Downloader Pro
         </h1>
-        <p class="text-slate-400 mt-2 text-sm">Download Video YouTube Resolusi Penuh (1080p / 4K / Max)</p>
+        <p class="text-slate-400 mt-2 text-sm">Downloader YouTube Anti-Error (Multi-Server)</p>
     </div>
 
     <!-- Card Downloader -->
@@ -25,15 +25,148 @@
                 class="w-full p-3.5 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-red-500 text-sm">
         </div>
 
-        <!-- Form Tipe Format -->
+        <!-- Form Tipe Format & Kualitas -->
         <div class="grid grid-cols-2 gap-3 mb-4">
             <div>
                 <label class="block text-xs font-semibold text-slate-300 mb-1">Format</label>
-                <select id="format" onchange="toggleQualityDropdown()" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-red-500">
-                    <option value="mp4">Video (MP4)</option>
-                    <option value="mp3">Audio (MP3)</option>
+                <select id="format" onchange="toggleQuality()" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-red-500">
+                    <option value="auto">Video (MP4)</option>
+                    <option value="audio">Audio (MP3)</option>
                 </select>
             </div>
+
+            <div id="qualityContainer">
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Kualitas</label>
+                <select id="vQuality" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-red-500">
+                    <option value="max" selected>Kualitas Maksimal</option>
+                    <option value="1080">Full HD (1080p)</option>
+                    <option value="720">HD (720p)</option>
+                    <option value="480">SD (480p)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Tombol Submit -->
+        <button onclick="startDownloadProcess()" id="btnSubmit" 
+            class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-red-600/30">
+            Ambil Link Video
+        </button>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="hidden mt-4 text-center">
+            <p id="loadingStatus" class="text-xs text-yellow-400 animate-pulse">Menghubungkan ke server...</p>
+        </div>
+    </div>
+
+    <!-- Result Area -->
+    <div id="result" class="hidden w-full max-w-md mt-6 p-6 bg-slate-800 rounded-2xl border border-slate-700 text-center space-y-3">
+        <p class="text-green-400 font-bold text-sm">Link Siap Diunduh!</p>
+        <a id="downloadLink" href="#" target="_blank" rel="noopener noreferrer"
+            class="block bg-green-600 hover:bg-green-700 py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-green-600/20">
+            Download File
+        </a>
+    </div>
+
+    <!-- Error Area -->
+    <div id="error" class="hidden w-full max-w-md mt-4 p-3 bg-red-900/40 text-red-300 rounded-xl text-xs border border-red-700/50 text-center"></div>
+
+    <script>
+        // Daftar Endpoint API Cadangan (Jika Server 1 gagal, otomatis mencoba Server 2 & 3)
+        const API_SERVERS = [
+            "https://api.cobalt.tools",
+            "https://cobalt-api.kwiatek.xyz",
+            "https://co.wuk.sh"
+        ];
+
+        function toggleQuality() {
+            const format = document.getElementById('format').value;
+            const qualityContainer = document.getElementById('qualityContainer');
+            if (format === 'audio') {
+                qualityContainer.classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                qualityContainer.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        async function fetchFromApi(serverUrl, payload) {
+            const response = await fetch(serverUrl, {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+            return await response.json();
+        }
+
+        async function startDownloadProcess() {
+            const ytUrl = document.getElementById('ytUrl').value.trim();
+            const format = document.getElementById('format').value;
+            const quality = document.getElementById('vQuality').value;
+            
+            const btn = document.getElementById('btnSubmit');
+            const loading = document.getElementById('loading');
+            const loadingStatus = document.getElementById('loadingStatus');
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('error');
+            const downloadLink = document.getElementById('downloadLink');
+
+            if (!ytUrl) {
+                alert("Silakan tempel URL YouTube terlebih dahulu!");
+                return;
+            }
+
+            // Reset UI
+            resultDiv.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+            loading.classList.remove('hidden');
+            btn.disabled = true;
+
+            const payload = {
+                url: ytUrl,
+                videoQuality: quality,
+                downloadMode: format, // 'auto' untuk video, 'audio' untuk MP3
+                youtubeVideoCodec: "h264"
+            };
+
+            let success = false;
+
+            // Loop mencoba server satu per satu jika terjadi error
+            for (let i = 0; i < API_SERVERS.length; i++) {
+                const currentServer = API_SERVERS[i];
+                loadingStatus.innerText = `Memproses via Server ${i + 1}...`;
+
+                try {
+                    const data = await fetchFromApi(currentServer, payload);
+
+                    if (data.url) {
+                        downloadLink.href = data.url;
+                        resultDiv.classList.remove('hidden');
+                        success = true;
+                        break; // Keluar dari loop jika berhasil
+                    } else if (data.status === "picker" && data.picker && data.picker.length > 0) {
+                        downloadLink.href = data.picker[0].url;
+                        resultDiv.classList.remove('hidden');
+                        success = true;
+                        break;
+                    }
+                } catch (err) {
+                    console.warn(`Server ${currentServer} gagal/error, mencoba server berikutnya...`);
+                }
+            }
+
+            if (!success) {
+                errorDiv.innerText = "Semua server sibuk atau link diblokir oleh YouTube. Coba gunakan link video YouTube yang lain.";
+                errorDiv.classList.remove('hidden');
+            }
+
+            loading.classList.add('hidden');
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
 
             <!-- Options Kualitas Video -->
             <div id="qualityContainer">
