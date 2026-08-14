@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YT Downloader Pro Tembus Blokir</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Header -->
+    <div class="text-center mb-6">
+        <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">
+            YT Downloader Pro
+        </h1>
+        <p class="text-slate-400 mt-1 text-xs">Versi Tembus Blokir Internet Positif</p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="w-full max-w-md bg-slate-800 p-6 rounded-2xl shadow-2xl border border-slate-700">
+        
+        <!-- Input URL -->
+        <div class="mb-4">
+            <label class="block text-xs font-semibold text-slate-300 mb-1">URL Video YouTube</label>
+            <input id="ytUrl" type="text" placeholder="Tempel link YouTube di sini..." 
+                class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-red-500 text-sm">
+        </div>
+
+        <!-- Tombol Submit -->
+        <button onclick="processBypass()" id="btnSubmit" 
+            class="w-full bg-red-600 hover:bg-red-700 active:scale-95 transition py-3 rounded-xl font-bold text-sm shadow-lg shadow-red-600/30">
+            Ekstrak Video Bebas Blokir
+        </button>
+
+        <!-- Loading Status -->
+        <div id="loading" class="hidden mt-4 text-center">
+            <p class="text-xs text-yellow-400 animate-pulse">Sedang melewati jalur blokir Kominfo...</p>
+        </div>
+    </div>
+
+    <!-- Result Area -->
+    <div id="result" class="hidden w-full max-w-md mt-4 p-5 bg-slate-800 rounded-2xl border border-slate-700 text-center space-y-3">
+        <p class="text-green-400 font-bold text-sm">Video Berhasil Diekstrak!</p>
+        <p id="videoTitle" class="text-xs text-slate-300 font-semibold line-clamp-2"></p>
+        <a id="downloadLink" href="#" target="_blank" rel="noopener noreferrer"
+            class="block bg-green-600 hover:bg-green-700 py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-green-600/20">
+            Download File MP4
+        </a>
+    </div>
+
+    <!-- Error Area -->
+    <div id="error" class="hidden w-full max-w-md mt-4 p-3 bg-red-900/40 text-red-300 rounded-xl text-xs border border-red-700/50 text-center"></div>
+
+    <script>
+        function extractId(url) {
+            const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+            return match ? match[1] : null;
+        }
+
+        async function processBypass() {
+            const url = document.getElementById("ytUrl").value.trim();
+            const btn = document.getElementById("btnSubmit");
+            const loading = document.getElementById("loading");
+            const resultDiv = document.getElementById("result");
+            const errorDiv = document.getElementById("error");
+            const downloadLink = document.getElementById("downloadLink");
+            const videoTitle = document.getElementById("videoTitle");
+
+            resultDiv.classList.add("hidden");
+            errorDiv.classList.add("hidden");
+
+            const id = extractId(url);
+            if (!id) {
+                errorDiv.innerText = "URL YouTube tidak valid.";
+                errorDiv.classList.remove("hidden");
+                return;
+            }
+
+            loading.classList.remove("hidden");
+            btn.disabled = true;
+
+            // Menggunakan Proxy CORS Cloudflare untuk menembus blokir DNS ISP
+            const targetApi = "https://api.cobalt.tools/";
+            const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(targetApi);
+
+            try {
+                const res = await fetch(proxyUrl, {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        url: "https://www.youtube.com/watch?v=" + id,
+                        videoQuality: "max",
+                        youtubeVideoCodec: "h264"
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.url) {
+                    downloadLink.href = data.url;
+                    videoTitle.innerText = "Video YouTube Siap Diunduh";
+                    resultDiv.classList.remove("hidden");
+                } else if (data.picker && data.picker.length > 0) {
+                    downloadLink.href = data.picker[0].url;
+                    videoTitle.innerText = "Video YouTube Siap Diunduh";
+                    resultDiv.classList.remove("hidden");
+                } else {
+                    throw new Error("Gagal mengambil respon stream");
+                }
+            } catch (err) {
+                errorDiv.innerText = "Gagal memproses video. Jalur proxy sedang padat.";
+                errorDiv.classList.remove("hidden");
+            } finally {
+                loading.classList.add("hidden");
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
