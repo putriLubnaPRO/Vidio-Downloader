@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YT Downloader Pro - Embed Version</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Header -->
+    <div class="text-center mb-6">
+        <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">
+            YT Downloader Pro
+        </h1>
+        <p class="text-slate-400 mt-1 text-xs">Sistem Widget Embed - Anti CORS & Anti Gagal</p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="w-full max-w-md bg-slate-800 p-6 rounded-2xl shadow-2xl border border-slate-700">
+        
+        <!-- Input URL -->
+        <div class="mb-4">
+            <label class="block text-xs font-semibold text-slate-300 mb-1">URL Video YouTube</label>
+            <input id="ytUrl" type="text" placeholder="https://youtu.be/..." 
+                class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-red-500 text-sm">
+        </div>
+
+        <!-- Tombol Submit -->
+        <button onclick="loadDownloader()" id="btnSubmit" 
+            class="w-full bg-red-600 hover:bg-red-700 active:scale-95 transition py-3 rounded-xl font-bold text-sm shadow-lg shadow-red-600/30">
+            Tampilkan Widget Download
+        </button>
+    </div>
+
+    <!-- Container Widget Embed -->
+    <div id="result" class="hidden w-full max-w-md mt-4 bg-slate-800 rounded-2xl border border-slate-700 p-4 text-center space-y-4">
+        <p class="text-xs font-bold text-green-400">Pilih Kualitas & Format Download:</p>
+        
+        <!-- Frame Downloader -->
+        <div class="w-full rounded-xl overflow-hidden border border-slate-700 bg-slate-900" style="min-height: 260px;">
+            <iframe id="downloadWidget" src="" class="w-full h-[280px] border-0" allowtransparency="true" scrolling="no"></iframe>
+        </div>
+
+        <!-- Jalur Cadangan -->
+        <div class="pt-2 border-t border-slate-700/60">
+            <p class="text-[11px] text-slate-400 mb-2">Jalur Alternatif Jika Widget Terhalang:</p>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <a id="altLink1" href="#" target="_blank" rel="noopener noreferrer" class="p-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-200 font-semibold transition">Cobalt Direct</a>
+                <a id="altLink2" href="#" target="_blank" rel="noopener noreferrer" class="p-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-200 font-semibold transition">SaveFrom Direct</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Area -->
+    <div id="error" class="hidden w-full max-w-md mt-4 p-3 bg-red-900/40 text-red-300 rounded-xl text-xs border border-red-700/50 text-center"></div>
+
+    <script>
+        function extractId(url) {
+            const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+            return match ? match[1] : null;
+        }
+
+        function loadDownloader() {
+            const url = document.getElementById("ytUrl").value.trim();
+            const resultDiv = document.getElementById("result");
+            const errorDiv = document.getElementById("error");
+            const iframe = document.getElementById("downloadWidget");
+
+            resultDiv.classList.add("hidden");
+            errorDiv.classList.add("hidden");
+
+            const id = extractId(url);
+            if (!id) {
+                errorDiv.innerText = "URL YouTube tidak valid! Masukkan link video YouTube yang benar.";
+                errorDiv.classList.remove("hidden");
+                return;
+            }
+
+            const fullYtUrl = "https://www.youtube.com/watch?v=" + id;
+            
+            // Menggunakan Loader Embed Widget
+            iframe.src = "https://loader.to/api/card/?url=" + encodeURIComponent(fullYtUrl);
+
+            // Link Cadangan
+            document.getElementById("altLink1").href = "https://cobalt.tools";
+            document.getElementById("altLink2").href = "https://en.savefrom.net/1-youtube-video-downloader-3v1/?url=" + encodeURIComponent(fullYtUrl);
+
+            resultDiv.classList.remove("hidden");
+        }
+    </script>
+</body>
+</html>
