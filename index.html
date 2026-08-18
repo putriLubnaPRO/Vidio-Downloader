@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Image Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial; text-align: center; padding: 20px; background: #222; color: white;}
+        input { padding: 10px; width: 80%; margin-bottom: 10px; border-radius: 5px;}
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px;}
+        img { max-width: 100%; margin-top: 20px; border-radius: 10px; display: none;}
+    </style>
+</head>
+<body>
+    <h2>AI Gambar Generator</h2>
+    <input type="text" id="prompt" placeholder="Ketik apa yang ingin digambar AI...">
+    <br>
+    <button onclick="buatGambar()">Buat Gambar</button>
+    <br>
+    <p id="status"></p>
+    <img id="hasil" src="" alt="Hasil AI">
+
+    <script>
+        async function buatGambar() {
+            document.getElementById("status").innerText = "Sedang memproses... (Tunggu 10-20 detik)";
+            document.getElementById("hasil").style.display = "none";
+            const teks = document.getElementById("prompt").value;
+
+            // GANTI URL DI BAWAH DENGAN URL PYTHONANYWHERE ANDA
+            const url_backend = "https://Lubnapri.pythonanywhere.com/generate";
+
+            try {
+                const respon = await fetch(url_backend, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ prompt: teks })
+                });
+
+                if (respon.ok) {
+                    const blob = await respon.blob();
+                    document.getElementById("hasil").src = URL.createObjectURL(blob);
+                    document.getElementById("hasil").style.display = "block";
+                    document.getElementById("status").innerText = "Selesai!";
+                } else {
+                    document.getElementById("status").innerText = "Gagal, coba lagi nanti.";
+                }
+            } catch (error) {
+                document.getElementById("status").innerText = "Error server.";
+            }
+        }
+    </script>
+</body>
+  </html>
+  
